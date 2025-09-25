@@ -22,6 +22,8 @@ const BookingSystem = () => {
     preferred_time: ""
   });
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [selectedTime, setSelectedTime] = useState<string>("");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -256,20 +258,25 @@ const BookingSystem = () => {
                     </Select>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Preferred Date</label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full justify-start text-left font-normal"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 z-50" align="start">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Preferred Date & Time</label>
+                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {selectedDate && selectedTime 
+                            ? `${format(selectedDate, "PPP")} at ${selectedTime}` 
+                            : selectedDate 
+                            ? `${format(selectedDate, "PPP")} - Select time`
+                            : "Pick a date and time"
+                          }
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div className="p-4 space-y-4">
                           <Calendar
                             mode="single"
                             selected={selectedDate}
@@ -279,35 +286,47 @@ const BookingSystem = () => {
                                 ...prev, 
                                 preferred_date: date ? format(date, "yyyy-MM-dd") : "" 
                               }));
+                              setSelectedTime("");
+                              setFormData(prev => ({ ...prev, preferred_time: "" }));
                             }}
                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                             initialFocus
-                            className="bg-background border shadow-lg"
+                            className="rounded-md border"
                           />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Preferred Time</label>
-                      <Select 
-                        value={formData.preferred_time} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, preferred_time: value }))}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="09:00">9:00 AM</SelectItem>
-                          <SelectItem value="10:00">10:00 AM</SelectItem>
-                          <SelectItem value="11:00">11:00 AM</SelectItem>
-                          <SelectItem value="13:00">1:00 PM</SelectItem>
-                          <SelectItem value="14:00">2:00 PM</SelectItem>
-                          <SelectItem value="15:00">3:00 PM</SelectItem>
-                          <SelectItem value="16:00">4:00 PM</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                          
+                          {selectedDate && (
+                            <div className="border-t pt-4">
+                              <h4 className="text-sm font-medium mb-3">Available Times</h4>
+                              <div className="grid grid-cols-2 gap-2">
+                                {["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map((time) => {
+                                  const timeLabel = time === "13:00" ? "1:00 PM" : 
+                                                  time === "14:00" ? "2:00 PM" :
+                                                  time === "15:00" ? "3:00 PM" :
+                                                  time === "16:00" ? "4:00 PM" :
+                                                  `${parseInt(time.split(':')[0])}:00 AM`;
+                                  
+                                  return (
+                                    <Button
+                                      key={time}
+                                      variant={selectedTime === time ? "default" : "outline"}
+                                      size="sm"
+                                      className="text-xs"
+                                      onClick={() => {
+                                        setSelectedTime(time);
+                                        setFormData(prev => ({ ...prev, preferred_time: time }));
+                                        setIsCalendarOpen(false);
+                                      }}
+                                    >
+                                      {timeLabel}
+                                    </Button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   
                   <div className="text-xs text-muted-foreground">
