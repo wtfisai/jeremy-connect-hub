@@ -5,9 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, MessageSquare, CheckCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, MessageSquare, CheckCircle } from "lucide-react";
+import { format } from "date-fns";
 
 const BookingSystem = () => {
   const [formData, setFormData] = useState({
@@ -15,8 +18,10 @@ const BookingSystem = () => {
     email: "",
     consultation_type: "",
     message: "",
-    preferred_date: ""
+    preferred_date: "",
+    preferred_time: ""
   });
+  const [selectedDate, setSelectedDate] = useState<Date>();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -67,7 +72,9 @@ const BookingSystem = () => {
         .from('bookings')
         .insert([{
           ...formData,
-          preferred_date: formData.preferred_date ? new Date(formData.preferred_date).toISOString() : null
+          preferred_date: formData.preferred_date && formData.preferred_time 
+            ? new Date(`${formData.preferred_date}T${formData.preferred_time}:00`).toISOString() 
+            : null
         }]);
 
       if (error) throw error;
@@ -82,8 +89,10 @@ const BookingSystem = () => {
         email: "",
         consultation_type: "",
         message: "",
-        preferred_date: ""
+        preferred_date: "",
+        preferred_time: ""
       });
+      setSelectedDate(undefined);
     } catch (error) {
       toast({
         title: "Error",
@@ -109,16 +118,16 @@ const BookingSystem = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+          <h2 className="mobile-heading font-bold mb-6">
             Book a <span className="gradient-text">Consultation</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
             Ready to transform your business? Schedule a consultation to discuss your specific needs 
             and explore how my expertise can drive your success.
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Consultation Types */}
           <motion.div
             initial={{ opacity: 0, x: -40 }}
@@ -247,17 +256,61 @@ const BookingSystem = () => {
                     </Select>
                   </div>
 
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Preferred Date & Time</label>
-                    <Input
-                      type="datetime-local"
-                      value={formData.preferred_date}
-                      onChange={(e) => setFormData(prev => ({ ...prev, preferred_date: e.target.value }))}
-                      min={new Date().toISOString().slice(0, 16)}
-                    />
-                    <p className="text-xs text-muted-foreground mt-2">
-                      I'll confirm availability and suggest alternatives if needed
-                    </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Preferred Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full justify-start text-left font-normal"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={selectedDate}
+                            onSelect={(date) => {
+                              setSelectedDate(date);
+                              setFormData(prev => ({ 
+                                ...prev, 
+                                preferred_date: date ? format(date, "yyyy-MM-dd") : "" 
+                              }));
+                            }}
+                            disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Preferred Time</label>
+                      <Select 
+                        value={formData.preferred_time} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, preferred_time: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="09:00">9:00 AM</SelectItem>
+                          <SelectItem value="10:00">10:00 AM</SelectItem>
+                          <SelectItem value="11:00">11:00 AM</SelectItem>
+                          <SelectItem value="13:00">1:00 PM</SelectItem>
+                          <SelectItem value="14:00">2:00 PM</SelectItem>
+                          <SelectItem value="15:00">3:00 PM</SelectItem>
+                          <SelectItem value="16:00">4:00 PM</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    <p>Available Monday-Friday, 9 AM - 5 PM EST. I'll confirm availability and suggest alternatives if needed.</p>
                   </div>
 
                   <div>
