@@ -5,7 +5,7 @@ import { useTheme } from "@/contexts/ThemeProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, X, Sun, Moon, Laptop, LogOut, User } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
-import jeremyProfile from "@/assets/jeremy-profile.jpg";
+import jeremyProfile from "@/assets/jeremy-profile-icon.jpg";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   DropdownMenu,
