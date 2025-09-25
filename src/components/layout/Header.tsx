@@ -1,18 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/contexts/ThemeProvider";
-import { Menu, X, Sun, Moon, Laptop } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Menu, X, Sun, Moon, Laptop, LogOut, User } from "lucide-react";
+import AuthModal from "@/components/auth/AuthModal";
+import jeremyProfile from "@/assets/jeremy-profile.jpg";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [user, setUser] = useState<SupabaseUser | null>(null);
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  const handleAuthSuccess = (newUser: SupabaseUser) => {
+    setUser(newUser);
+  };
 
   const navItems = [
     { href: "#about", label: "About" },
@@ -34,11 +66,13 @@ const Header = () => {
           {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="flex items-center space-x-2"
+            className="flex items-center space-x-3"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">JW</span>
-            </div>
+            <img 
+              src={jeremyProfile} 
+              alt="Jeremy Williams"
+              className="w-8 h-8 rounded-lg object-cover"
+            />
             <span className="font-bold text-xl gradient-text">Jeremy Williams</span>
           </motion.div>
 
@@ -56,8 +90,39 @@ const Header = () => {
             ))}
           </nav>
 
-          {/* Theme Toggle & Mobile Menu */}
+          {/* Theme Toggle & Auth */}
           <div className="flex items-center space-x-4">
+            {/* User Menu or Auth Button */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">Premium Member</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowAuthModal(true)}
+              >
+                Sign In
+              </Button>
+            )}
+
+            {/* Theme Toggle */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -117,6 +182,13 @@ const Header = () => {
           </motion.nav>
         )}
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </motion.header>
   );
 };
