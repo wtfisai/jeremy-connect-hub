@@ -1,49 +1,28 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/contexts/ThemeProvider";
-import { supabase } from "@/integrations/supabase/client";
-import { Menu, X, Sun, Moon, Laptop, LogOut, User } from "lucide-react";
-import AuthModal from "@/components/auth/AuthModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Menu, X, User, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { motion } from "framer-motion";
 import jeremyProfile from "@/assets/jeremy-profile-icon.jpg";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const { theme, setTheme } = useTheme();
-
-  useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
+  const { user, signOut } = useAuth();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    await signOut();
   };
 
-  const handleAuthSuccess = (newUser: SupabaseUser) => {
-    setUser(newUser);
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      setIsMenuOpen(false);
+    }
   };
 
   const navItems = [
@@ -79,73 +58,53 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <motion.a
+              <motion.button
                 key={item.href}
-                href={item.href}
+                onClick={() => scrollToSection(item.href.replace('#', ''))}
                 whileHover={{ y: -2 }}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 {item.label}
-              </motion.a>
+              </motion.button>
             ))}
           </nav>
 
-          {/* Theme Toggle & Auth */}
-          <div className="flex items-center space-x-4">
-            {/* User Menu or Auth Button */}
+          {/* Desktop Auth & Theme */}
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <User className="h-5 w-5" />
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{user.email}</p>
-                    <p className="text-xs text-muted-foreground">Premium Member</p>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="flex flex-col space-y-1 p-2">
+                    <p className="text-sm font-medium leading-none">{user.user_metadata?.full_name || user.email}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
+                    <span>Sign out</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setShowAuthModal(true)}
-              >
-                Sign In
-              </Button>
-            )}
-
-            {/* Theme Toggle */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                  <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-                  <span className="sr-only">Toggle theme</span>
+              <Link to="/auth">
+                <Button variant="outline" size="sm">
+                  <User className="mr-2 h-4 w-4" />
+                  Sign In
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setTheme("light")}>
-                  <Sun className="mr-2 h-4 w-4" />
-                  <span>Light</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("dark")}>
-                  <Moon className="mr-2 h-4 w-4" />
-                  <span>Dark</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTheme("system")}>
-                  <Laptop className="mr-2 h-4 w-4" />
-                  <span>System</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Link>
+            )}
 
             {/* Mobile Menu Button */}
             <Button
@@ -169,26 +128,49 @@ const Header = () => {
           >
             <div className="flex flex-col space-y-4">
               {navItems.map((item) => (
-                <a
+                <button
                   key={item.href}
-                  href={item.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors py-2"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => scrollToSection(item.href.replace('#', ''))}
+                  className="text-muted-foreground hover:text-foreground transition-colors py-2 text-left"
                 >
                   {item.label}
-                </a>
+                </button>
               ))}
+            </div>
+            
+            <div className="px-6 py-4 space-y-4 border-t">
+              <ThemeToggle />
+              {user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 px-3 py-2 bg-accent/50 rounded-lg">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{user.user_metadata?.full_name || user.email}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" onClick={handleSignOut} className="w-full">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    <User className="mr-2 h-4 w-4" />
+                    Sign In
+                  </Button>
+                </Link>
+              )}
             </div>
           </motion.nav>
         )}
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-      />
     </motion.header>
   );
 };

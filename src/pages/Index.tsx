@@ -1,5 +1,4 @@
 import { useEffect } from "react";
-import { User } from "@supabase/supabase-js";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Hero from "@/components/sections/Hero";
@@ -11,12 +10,10 @@ import BookingSystem from "@/components/sections/BookingSystem";
 import ContactForm from "@/components/ContactForm";
 import PremiumChat from "@/components/PremiumChat";
 import { useAnalytics } from "@/hooks/useAnalytics";
+import { useAuth } from "@/contexts/AuthContext";
 
-interface IndexProps {
-  user: User | null;
-}
-
-const Index = ({ user }: IndexProps) => {
+const Index = () => {
+  const { user } = useAuth();
   const { trackEvent } = useAnalytics(user);
 
   useEffect(() => {
