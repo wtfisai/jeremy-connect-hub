@@ -269,7 +269,7 @@ const BookingSystem = () => {
                             {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-auto p-0 z-50" align="start">
                           <Calendar
                             mode="single"
                             selected={selectedDate}
@@ -282,6 +282,7 @@ const BookingSystem = () => {
                             }}
                             disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
                             initialFocus
+                            className="bg-background border shadow-lg"
                           />
                         </PopoverContent>
                       </Popover>
