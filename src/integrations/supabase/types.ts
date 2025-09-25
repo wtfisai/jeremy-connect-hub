@@ -14,7 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          consultation_type: string
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          name: string
+          preferred_date: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          consultation_type: string
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          preferred_date?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          consultation_type?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          preferred_date?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      direct_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          status: string | null
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          status?: string | null
+          subject: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          status?: string | null
+          subject?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      newsletter_subscribers: {
+        Row: {
+          confirmation_token: string | null
+          confirmed: boolean | null
+          confirmed_at: string | null
+          email: string
+          id: string
+          subscribed_at: string
+          user_id: string | null
+        }
+        Insert: {
+          confirmation_token?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          email: string
+          id?: string
+          subscribed_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          confirmation_token?: string | null
+          confirmed?: boolean | null
+          confirmed_at?: string | null
+          email?: string
+          id?: string
+          subscribed_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
