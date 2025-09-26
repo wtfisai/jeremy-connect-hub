@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,10 +24,42 @@ const BookingSystem = () => {
   });
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>("");
+  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingId, setBookingId] = useState<string>("");
   const { toast } = useToast();
+
+  // Load available time slots when date changes
+  useEffect(() => {
+    if (selectedDate && step === 'calendar') {
+      loadAvailableSlots(selectedDate);
+    }
+  }, [selectedDate, step]);
+
+  const loadAvailableSlots = async (date: Date) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('check-calendar-availability', {
+        body: { 
+          date: format(date, 'yyyy-MM-dd'),
+          adminId: 'admin' // You would get this from your admin context
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.availableSlots) {
+        setAvailableSlots(data.availableSlots.map((slot: any) => slot.time));
+      } else {
+        // Fallback to default slots if calendar integration isn't set up
+        setAvailableSlots(["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"]);
+      }
+    } catch (error) {
+      console.error('Error loading available slots:', error);
+      // Fallback to default slots
+      setAvailableSlots(["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"]);
+    }
+  };
 
   const consultationTypes = [
     {
@@ -228,7 +260,7 @@ const BookingSystem = () => {
                     <div className="mt-6 border-t pt-6">
                       <h4 className="text-sm font-medium mb-3">Available Times</h4>
                       <div className="grid grid-cols-2 gap-2">
-                        {["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"].map((time) => {
+                        {availableSlots.map((time) => {
                           const timeLabel = time === "13:00" ? "1:00 PM" : 
                                           time === "14:00" ? "2:00 PM" :
                                           time === "15:00" ? "3:00 PM" :

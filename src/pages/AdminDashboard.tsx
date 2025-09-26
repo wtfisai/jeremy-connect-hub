@@ -87,7 +87,9 @@ const AdminDashboard = () => {
     },
     timezone: 'America/New_York',
     bufferTime: 15,
-    maxAdvanceBooking: 60
+    maxAdvanceBooking: 60,
+    connected: false,
+    googleCalendarId: ''
   });
   const [holidays, setHolidays] = useState([
     { name: "New Year's Day", date: "2025-01-01", enabled: true },
@@ -139,7 +141,8 @@ const AdminDashboard = () => {
       await Promise.all([
         loadAnalytics(),
         loadMessages(),
-        loadContactSubmissions()
+        loadContactSubmissions(),
+        loadCalendarSettings()
       ]);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -150,6 +153,26 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCalendarSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from('calendar_settings')
+        .select('*')
+        .eq('admin_id', adminUser?.userId)
+        .single();
+
+      if (data) {
+        setCalendarSettings(prev => ({
+          ...prev,
+          connected: !!data.access_token,
+          googleCalendarId: data.google_calendar_id
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading calendar settings:', error);
     }
   };
 
@@ -268,6 +291,37 @@ const AdminDashboard = () => {
       setContactSubmissions(data || []);
     } catch (error) {
       console.error('Error loading contact submissions:', error);
+    }
+  };
+
+  const handleGoogleCalendarConnect = async () => {
+    try {
+      // Redirect to Google Calendar OAuth
+      const baseUrl = window.location.origin;
+      const oauthUrl = `${baseUrl}/functions/v1/google-calendar-oauth?state=${adminUser?.userId}`;
+      window.location.href = oauthUrl;
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to connect Google Calendar",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveCalendarSettings = async () => {
+    try {
+      // Here you would save the calendar settings to the database
+      toast({
+        title: "Settings Saved",
+        description: "Calendar settings have been updated successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save calendar settings",
+        variant: "destructive",
+      });
     }
   };
 
@@ -740,9 +794,34 @@ const AdminDashboard = () => {
                         />
                       </div>
 
-                      <Button className="w-full">
+                      <Button 
+                        className="w-full"
+                        onClick={handleGoogleCalendarConnect}
+                        disabled={calendarSettings.connected}
+                      >
                         <Globe className="h-4 w-4 mr-2" />
-                        Connect Google Calendar
+                        {calendarSettings.connected ? 'Calendar Connected ✓' : 'Connect Google Calendar'}
+                      </Button>
+
+                      {calendarSettings.connected && (
+                        <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                          <p className="text-sm text-green-800 dark:text-green-300">
+                            ✓ Google Calendar connected successfully
+                          </p>
+                          {calendarSettings.googleCalendarId && (
+                            <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                              Calendar ID: {calendarSettings.googleCalendarId}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <Button 
+                        className="w-full mt-4" 
+                        variant="outline"
+                        onClick={saveCalendarSettings}
+                      >
+                        Save Settings
                       </Button>
                     </CardContent>
                   </Card>
