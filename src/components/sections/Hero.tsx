@@ -41,7 +41,11 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12"
           >
-            <Button size="lg" className="group text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full w-full sm:w-auto">
+            <Button 
+              size="lg" 
+              className="group text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full w-full sm:w-auto"
+              onClick={() => document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' })}
+            >
               Book a Consultation
               <ArrowRight className="ml-2 h-4 sm:h-5 w-4 sm:w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
@@ -105,8 +109,8 @@ const Hero = () => {
           </div>
           
           <div className="text-center p-6 rounded-2xl bg-card border border-border">
-            <div className="text-3xl font-bold gradient-text mb-2">3</div>
-            <div className="text-muted-foreground">Core Specialties</div>
+            <div className="text-3xl font-bold gradient-text mb-2">25+</div>
+            <div className="text-muted-foreground">Software Proficiencies</div>
           </div>
           
           <div className="text-center p-6 rounded-2xl bg-card border border-border">
