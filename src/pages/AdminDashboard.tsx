@@ -257,8 +257,8 @@ const AdminDashboard = () => {
         return;
       }
 
-      // For admin access, try to get profile data with proper security context
-      // Since RLS policies now restrict email access, we handle gracefully if access is denied
+      // For admin access, get profile data with proper admin authentication
+      // Admin policies should allow access to all profile data including emails
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name, email')

@@ -31,6 +31,7 @@ const PremiumChat = ({ user }: PremiumChatProps) => {
     if (!user) return;
 
     try {
+      // Only select non-sensitive fields for premium status check
       const { data: profile } = await supabase
         .from('profiles')
         .select('subscription_tier')
@@ -40,6 +41,7 @@ const PremiumChat = ({ user }: PremiumChatProps) => {
       setIsPremium(profile?.subscription_tier === 'premium');
     } catch (error) {
       console.error('Error checking premium status:', error);
+      setIsPremium(false);
     }
   };
 
