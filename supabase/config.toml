@@ -1,1 +1,10 @@
 project_id = "gdnpareharddegunrjyz"
+
+[functions.google-calendar-oauth]
+verify_jwt = false
+
+[functions.check-calendar-availability]
+verify_jwt = false
+
+[functions.create-calendar-event]
+verify_jwt = false
