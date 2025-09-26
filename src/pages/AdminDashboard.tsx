@@ -30,7 +30,7 @@ interface AdminUser {
   email: string;
   full_name: string;
   last_login: string;
-  userId: string;
+  admin_id: string;
 }
 
 interface AnalyticsData {
@@ -161,7 +161,7 @@ const AdminDashboard = () => {
       const { data } = await supabase
         .from('calendar_settings')
         .select('*')
-        .eq('admin_id', adminUser?.userId)
+        .eq('admin_id', adminUser?.admin_id)
         .single();
 
       if (data) {
@@ -308,7 +308,7 @@ const AdminDashboard = () => {
     try {
       // Redirect to Google Calendar OAuth
       const baseUrl = 'https://gdnpareharddegunrjyz.supabase.co';
-      const oauthUrl = `${baseUrl}/functions/v1/google-calendar-oauth?state=${adminUser?.userId}`;
+      const oauthUrl = `${baseUrl}/functions/v1/google-calendar-oauth?state=${adminUser?.admin_id}`;
       window.location.href = oauthUrl;
     } catch (error) {
       toast({
@@ -345,7 +345,7 @@ const AdminDashboard = () => {
           status: 'responded',
           admin_response: responseText,
           responded_at: new Date().toISOString(),
-          responded_by: adminUser?.userId
+          responded_by: adminUser?.admin_id
         })
         .eq('id', messageId);
 
@@ -535,6 +535,119 @@ const AdminDashboard = () => {
                             <span className="text-sm font-medium">{device.count}</span>
                           </div>
                         ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Pending Items Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Pending Messages */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5" />
+                        Pending Messages
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {messages.filter(m => m.status === 'unread').slice(0, 3).map((message) => (
+                          <div key={message.id} className="p-3 border rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium text-sm">{message.subject}</p>
+                                <p className="text-xs text-muted-foreground">{message.profiles.full_name}</p>
+                              </div>
+                              <Badge variant="destructive" className="text-xs">New</Badge>
+                            </div>
+                          </div>
+                        ))}
+                        {messages.filter(m => m.status === 'unread').length === 0 && (
+                          <p className="text-sm text-muted-foreground">No pending messages</p>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => setActiveTab('messages')}
+                        >
+                          View All ({messages.filter(m => m.status === 'unread').length})
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Pending Contacts */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Mail className="h-5 w-5" />
+                        Pending Contacts
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {contactSubmissions.filter(c => c.status === 'new').slice(0, 3).map((contact) => (
+                          <div key={contact.id} className="p-3 border rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium text-sm">{contact.subject}</p>
+                                <p className="text-xs text-muted-foreground">{contact.name}</p>
+                              </div>
+                              <Badge variant="destructive" className="text-xs">New</Badge>
+                            </div>
+                          </div>
+                        ))}
+                        {contactSubmissions.filter(c => c.status === 'new').length === 0 && (
+                          <p className="text-sm text-muted-foreground">No pending contacts</p>
+                        )}
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => setActiveTab('contacts')}
+                        >
+                          View All ({contactSubmissions.filter(c => c.status === 'new').length})
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Calendar Status */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Calendar className="h-5 w-5" />
+                        Calendar Status
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Google Calendar</span>
+                          <Badge variant={calendarSettings.connected ? "default" : "secondary"}>
+                            {calendarSettings.connected ? "Connected" : "Not Connected"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Timezone</span>
+                          <span className="text-xs text-muted-foreground">{calendarSettings.timezone}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Working Days</span>
+                          <span className="text-xs text-muted-foreground">
+                            {Object.values(calendarSettings.workingHours).filter(h => h.enabled).length} days
+                          </span>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => setActiveTab('calendar')}
+                        >
+                          Manage Calendar
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
