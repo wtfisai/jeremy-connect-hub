@@ -257,12 +257,22 @@ const AdminDashboard = () => {
         return;
       }
 
+      // For admin access, try to get profile data with proper security context
+      // Since RLS policies now restrict email access, we handle gracefully if access is denied
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, full_name, email');
+        .select('user_id, full_name, email')
+        .in('user_id', messagesData?.map(m => m.user_id) || []);
 
       if (profilesError) {
-        console.error('Error loading profiles:', profilesError);
+        console.warn('Limited profile access due to security policies:', profilesError);
+        // If we can't get full profile data, create limited profile data
+        const messagesWithLimitedProfiles = messagesData?.map(message => ({
+          ...message,
+          profiles: { full_name: 'User Profile', email: 'Access Restricted' }
+        })) || [];
+        
+        setMessages(messagesWithLimitedProfiles);
         return;
       }
 
