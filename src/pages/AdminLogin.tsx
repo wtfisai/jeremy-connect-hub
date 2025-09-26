@@ -32,7 +32,7 @@ const AdminLogin = () => {
           title: "Login Successful",
           description: "Welcome to the admin dashboard!",
         });
-        window.location.href = '/admin-dashboard';
+        window.location.href = '/admin/dashboard';
       } else {
         throw new Error(data.error || 'Login failed');
       }
