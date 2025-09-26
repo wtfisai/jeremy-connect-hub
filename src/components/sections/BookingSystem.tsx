@@ -247,14 +247,16 @@ const BookingSystem = () => {
               </div>
 
               <Card className="border-0 shadow-lg">
-                <CardContent className="p-6">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    className="w-full"
-                  />
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      className="w-full max-w-sm mx-auto pointer-events-auto"
+                    />
+                  </div>
                   
                   {selectedDate && (
                     <div className="mt-6 border-t pt-6">
