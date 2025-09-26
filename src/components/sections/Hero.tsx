@@ -18,6 +18,11 @@ const Hero = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
+            <div className="mb-4">
+              <span className="inline-block px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-medium mb-4">
+                🚀 Transforming Operations • Driving Results • Maximizing ROI
+              </span>
+            </div>
             <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
               <span className="gradient-text">Jeremy Williams</span>
               <br />
@@ -31,6 +36,8 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-lg sm:text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto leading-relaxed px-4"
           >
+            <span className="font-semibold text-foreground">Reduce costs by 30% • Improve efficiency by 95% • Train 600+ drivers</span>
+            <br />
             15+ years transforming supply chains through strategic operations management, 
             cutting-edge technology consulting, and innovative brand development solutions.
           </motion.p>
@@ -114,8 +121,8 @@ const Hero = () => {
           </div>
           
           <div className="text-center p-6 rounded-2xl bg-card border border-border">
-            <div className="text-3xl font-bold gradient-text mb-2">600+</div>
-            <div className="text-muted-foreground">Drivers Trained</div>
+            <div className="text-3xl font-bold gradient-text mb-2">$2M+</div>
+            <div className="text-muted-foreground">Cost Savings Delivered</div>
           </div>
         </motion.div>
       </div>

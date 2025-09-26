@@ -57,7 +57,8 @@ const About = () => {
   ];
 
   return (
-    <section id="about" className="py-24 bg-background">
+    <>
+      <section id="about" className="py-24 bg-background">
       <div className="container-max section-padding">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -192,6 +193,134 @@ const About = () => {
         </div>
       </div>
     </section>
+    
+    {/* Experience Section with Company Photos and Icons */}
+    <section id="experience" className="py-24 bg-accent/5">
+      <div className="container-max section-padding">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+            My <span className="gradient-text">Professional Journey</span>
+          </h2>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            15+ years working with industry leaders, delivering transformational results
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+          {/* Company Experience Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <Card className="h-full border-0 shadow-lg overflow-hidden">
+              <div className="h-48 bg-gradient-to-br from-blue-500 to-cyan-500 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-white text-4xl font-bold">Baldor</div>
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-2">Transportation Safety Manager</h3>
+                <p className="text-primary font-medium mb-2">Baldor Specialty Foods</p>
+                <p className="text-sm text-muted-foreground mb-4">June 2024 - Present</p>
+                <p className="text-sm">Leading safety initiatives across warehousing and transportation operations, driving continuous improvement in workplace culture.</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            viewport={{ once: true }}
+          >
+            <Card className="h-full border-0 shadow-lg overflow-hidden">
+              <div className="h-48 bg-gradient-to-br from-green-500 to-emerald-500 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-white text-4xl font-bold">US Foods</div>
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-2">Transportation Manager III</h3>
+                <p className="text-primary font-medium mb-2">US Foods</p>
+                <p className="text-sm text-muted-foreground mb-4">Sept 2022 - April 2023</p>
+                <p className="text-sm">Trained 600+ drivers across four distribution facilities, reducing workplace incidents through proactive safety measures.</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+          >
+            <Card className="h-full border-0 shadow-lg overflow-hidden">
+              <div className="h-48 bg-gradient-to-br from-purple-500 to-pink-500 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-white text-3xl font-bold">MaxQuality</div>
+                </div>
+              </div>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold mb-2">Transportation Manager</h3>
+                <p className="text-primary font-medium mb-2">Maximum Quality Foods</p>
+                <p className="text-sm text-muted-foreground mb-4">March 2021 - Sept 2022</p>
+                <p className="text-sm">Improved PM compliance from 65% to 95%, managing 45+ drivers and developing strategic partnerships.</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Software Proficiencies */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+          className="text-center"
+        >
+          <h3 className="text-2xl font-bold mb-8">Software & Technology Proficiencies</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {[
+              { name: "Python", icon: "🐍" },
+              { name: "JavaScript", icon: "⚡" },
+              { name: "SQL", icon: "🗄️" },
+              { name: "Tableau", icon: "📊" },
+              { name: "Excel", icon: "📈" },
+              { name: "PowerBI", icon: "📱" },
+              { name: "Linux", icon: "🐧" },
+              { name: "Git", icon: "🔀" },
+              { name: "Adobe CS", icon: "🎨" },
+              { name: "SAP", icon: "💼" },
+              { name: "WMS", icon: "📦" },
+              { name: "TMS", icon: "🚛" }
+            ].map((software, index) => (
+              <motion.div
+                key={software.name}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: index * 0.05 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                <div className="w-16 h-16 mx-auto mb-3 bg-card border border-border rounded-xl flex items-center justify-center text-2xl hover:shadow-lg transition-shadow">
+                  {software.icon}
+                </div>
+                <p className="text-sm font-medium">{software.name}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </section>
+    </>
   );
 };
 

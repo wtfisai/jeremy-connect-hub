@@ -9,13 +9,16 @@ import {
   BarChart3, 
   Cpu, 
   Megaphone,
-  CheckCircle 
+  CheckCircle,
+  Building2,
+  Users,
+  Globe
 } from "lucide-react";
 
 const ExpertiseAreas = () => {
   const expertiseAreas = [
     {
-      icon: Truck,
+      icon: Building2,
       title: "Supply Chain Management",
       description: "15+ years of industry expertise across transportation, logistics, and operations",
       features: [
@@ -29,7 +32,7 @@ const ExpertiseAreas = () => {
       bgAccent: "bg-blue-50 dark:bg-blue-950/20"
     },
     {
-      icon: Code,
+      icon: Cpu,
       title: "Technology Consulting",
       description: "AI/ML solutions, software development, and digital transformation for SMBs",
       features: [
@@ -43,7 +46,7 @@ const ExpertiseAreas = () => {
       bgAccent: "bg-green-50 dark:bg-green-950/20"
     },
     {
-      icon: Palette,
+      icon: Globe,
       title: "Marketing & Brand Development",
       description: "Go-to-market strategies, visual design, and SEO optimization",
       features: [
@@ -130,12 +133,10 @@ const ExpertiseAreas = () => {
                     <Button 
                       variant="ghost" 
                       className="w-full group/btn mt-6"
-                      asChild
+                      onClick={() => document.getElementById('experience')?.scrollIntoView({ behavior: 'smooth' })}
                     >
-                      <a href="#booking">
-                        Consult on {area.title}
-                        <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                      </a>
+                      View Experience
+                      <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
                     </Button>
                   </CardContent>
                 </Card>
@@ -155,7 +156,11 @@ const ExpertiseAreas = () => {
           <p className="text-lg text-muted-foreground mb-6">
             Ready to transform your business with integrated solutions?
           </p>
-          <Button size="lg" className="text-lg px-8 py-6 rounded-full">
+          <Button 
+            size="lg" 
+            className="text-lg px-8 py-6 rounded-full"
+            onClick={() => document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth' })}
+          >
             Schedule Your Consultation
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
