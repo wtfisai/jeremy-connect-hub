@@ -1,21 +1,26 @@
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Users, 
-  Eye, 
-  MessageSquare, 
-  Mail, 
-  Calendar,
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Eye,
+  Users,
+  MessageSquare,
+  Mail,
   TrendingUp,
+  Calendar,
   Clock,
   LogOut,
   Search,
@@ -26,11 +31,13 @@ import {
 } from "lucide-react";
 
 interface AdminUser {
-  id: string;
+  userId: string;
   email: string;
-  full_name: string;
-  last_login: string;
-  admin_id: string;
+  fullName: string;
+  isAdmin: boolean;
+  loginTime: number;
+  iat: number;
+  exp: number;
 }
 
 interface AnalyticsData {
@@ -45,14 +52,17 @@ interface AnalyticsData {
 
 interface Message {
   id: string;
-  user_id: string;
   subject: string;
   message: string;
   status: string;
   priority: string;
-  admin_response?: string;
   created_at: string;
-  profiles: { full_name: string; email: string };
+  admin_response?: string;
+  responded_at?: string;
+  profiles: {
+    full_name: string;
+    email: string;
+  };
 }
 
 interface ContactSubmission {
@@ -67,14 +77,14 @@ interface ContactSubmission {
 
 const AdminDashboard = () => {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [contactSubmissions, setContactSubmissions] = useState<ContactSubmission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
   const [searchTerm, setSearchTerm] = useState('');
-  const [responseText, setResponseText] = useState('');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [responseText, setResponseText] = useState('');
   const [calendarSettings, setCalendarSettings] = useState({
     workingHours: {
       monday: { enabled: true, start: '09:00', end: '17:00' },
@@ -98,10 +108,13 @@ const AdminDashboard = () => {
     { name: "Memorial Day", date: "2025-05-26", enabled: true },
     { name: "Independence Day", date: "2025-07-04", enabled: true },
     { name: "Labor Day", date: "2025-09-01", enabled: true },
+    { name: "Columbus Day", date: "2025-10-13", enabled: true },
+    { name: "Veterans Day", date: "2025-11-11", enabled: true },
     { name: "Thanksgiving", date: "2025-11-27", enabled: true },
-    { name: "Christmas Eve", date: "2025-12-24", enabled: true },
     { name: "Christmas Day", date: "2025-12-25", enabled: true }
   ]);
+
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -111,6 +124,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (adminUser) {
       loadDashboardData();
+      loadCalendarSettings();
     }
   }, [adminUser]);
 
@@ -141,16 +155,10 @@ const AdminDashboard = () => {
       await Promise.all([
         loadAnalytics(),
         loadMessages(),
-        loadContactSubmissions(),
-        loadCalendarSettings()
+        loadContactSubmissions()
       ]);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -161,7 +169,7 @@ const AdminDashboard = () => {
       const { data } = await supabase
         .from('calendar_settings')
         .select('*')
-        .eq('admin_id', adminUser?.admin_id)
+        .eq('admin_id', adminUser?.userId)
         .single();
 
       if (data) {
@@ -178,25 +186,24 @@ const AdminDashboard = () => {
 
   const loadAnalytics = async () => {
     try {
-      // Get page views from last 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
+      // Get page views
       const { data: pageViews } = await supabase
         .from('page_views')
         .select('*')
-        .gte('created_at', thirtyDaysAgo.toISOString());
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
+      // Get sessions
       const { data: sessions } = await supabase
         .from('user_sessions')
         .select('*')
-        .gte('started_at', thirtyDaysAgo.toISOString());
+        .gte('started_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
 
       if (pageViews && sessions) {
-        const uniqueVisitors = new Set(pageViews.map(pv => pv.session_id)).size;
+        // Calculate metrics
         const totalPageViews = pageViews.length;
+        const uniqueVisitors = new Set(pageViews.map(pv => pv.session_id)).size;
         const totalSessions = sessions.length;
-        
+
         // Calculate average session duration
         const sessionsWithDuration = sessions.filter(s => s.total_duration);
         const averageSessionDuration = sessionsWithDuration.length > 0
@@ -308,7 +315,7 @@ const AdminDashboard = () => {
     try {
       // Redirect to Google Calendar OAuth
       const baseUrl = 'https://gdnpareharddegunrjyz.supabase.co';
-      const oauthUrl = `${baseUrl}/functions/v1/google-calendar-oauth?state=${adminUser?.admin_id}`;
+      const oauthUrl = `${baseUrl}/functions/v1/google-calendar-oauth?state=${adminUser?.userId}`;
       window.location.href = oauthUrl;
     } catch (error) {
       toast({
@@ -319,23 +326,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const saveCalendarSettings = async () => {
-    try {
-      // Here you would save the calendar settings to the database
-      toast({
-        title: "Settings Saved",
-        description: "Calendar settings have been updated successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save calendar settings",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const respondToMessage = async (messageId: string) => {
+  const handleResponseSubmit = async (messageId: string) => {
     if (!responseText.trim()) return;
 
     try {
@@ -345,7 +336,7 @@ const AdminDashboard = () => {
           status: 'responded',
           admin_response: responseText,
           responded_at: new Date().toISOString(),
-          responded_by: adminUser?.admin_id
+          responded_by: adminUser?.userId
         })
         .eq('id', messageId);
 
@@ -356,14 +347,39 @@ const AdminDashboard = () => {
         description: "Your response has been saved successfully.",
       });
 
-      setResponseText('');
       setSelectedMessage(null);
-      loadMessages();
+      setResponseText('');
+      loadMessages(); // Reload messages to reflect the update
     } catch (error) {
-      console.error('Error responding to message:', error);
+      console.error('Error sending response:', error);
       toast({
         title: "Error",
-        description: "Failed to send response",
+        description: "Failed to send response. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveCalendarSettings = async () => {
+    try {
+      const { error } = await supabase
+        .from('calendar_settings')
+        .upsert({
+          admin_id: adminUser?.userId,
+          // Store other settings as needed
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Settings Saved",
+        description: "Calendar settings have been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error saving calendar settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
         variant: "destructive",
       });
     }
@@ -371,24 +387,24 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
-    window.location.href = '/';
+    navigate('/admin');
   };
 
   const formatTimeAgo = (dateString: string) => {
-    const now = new Date();
     const date = new Date(dateString);
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
-    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}m ago`;
+    } else if (diffInMinutes < 1440) {
+      return `${Math.floor(diffInMinutes / 60)}h ago`;
+    } else {
+      return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    }
   };
 
-  if (!adminUser) {
-    return <div>Loading...</div>;
-  }
-
+  // Filter functions
   const filteredMessages = messages.filter(message =>
     message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     message.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -410,7 +426,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between h-16">
             <div>
               <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Welcome back, {adminUser.full_name}</p>
+              <p className="text-sm text-muted-foreground">Welcome back, {adminUser?.fullName}</p>
             </div>
             <Button onClick={handleLogout} variant="outline">
               <LogOut className="h-4 w-4 mr-2" />
@@ -454,91 +470,105 @@ const AdminDashboard = () => {
           <div>Loading...</div>
         ) : (
           <>
-            {activeTab === 'dashboard' && analytics && (
+            {activeTab === 'dashboard' && (
               <div className="space-y-6">
                 <h2 className="text-3xl font-bold">Dashboard Overview</h2>
                 
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Page Views</CardTitle>
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{analytics.totalPageViews}</div>
-                      <p className="text-xs text-muted-foreground">Last 30 days</p>
-                    </CardContent>
-                  </Card>
+                {analytics ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Page Views</CardTitle>
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{analytics.totalPageViews}</div>
+                          <p className="text-xs text-muted-foreground">Last 30 days</p>
+                        </CardContent>
+                      </Card>
 
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{analytics.uniqueVisitors}</div>
-                      <p className="text-xs text-muted-foreground">Last 30 days</p>
-                    </CardContent>
-                  </Card>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{analytics.uniqueVisitors}</div>
+                          <p className="text-xs text-muted-foreground">Last 30 days</p>
+                        </CardContent>
+                      </Card>
 
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{analytics.totalSessions}</div>
-                      <p className="text-xs text-muted-foreground">Last 30 days</p>
-                    </CardContent>
-                  </Card>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Total Sessions</CardTitle>
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{analytics.totalSessions}</div>
+                          <p className="text-xs text-muted-foreground">Last 30 days</p>
+                        </CardContent>
+                      </Card>
 
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Avg. Session</CardTitle>
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{Math.floor(analytics.averageSessionDuration / 60)}m</div>
-                      <p className="text-xs text-muted-foreground">{analytics.averageSessionDuration % 60}s average</p>
-                    </CardContent>
-                  </Card>
-                </div>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                          <CardTitle className="text-sm font-medium">Avg. Session</CardTitle>
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">{Math.floor(analytics.averageSessionDuration / 60)}m</div>
+                          <p className="text-xs text-muted-foreground">{analytics.averageSessionDuration % 60}s average</p>
+                        </CardContent>
+                      </Card>
+                    </div>
 
-                {/* Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Top Pages</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {analytics.topPages.map((page, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <span className="text-sm truncate">{page.page}</span>
-                            <span className="text-sm font-medium">{page.views}</span>
+                    {/* Charts */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Top Pages</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {analytics.topPages.map((page, index) => (
+                              <div key={index} className="flex items-center justify-between">
+                                <span className="text-sm truncate">{page.page}</span>
+                                <span className="text-sm font-medium">{page.views}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                        </CardContent>
+                      </Card>
 
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Device Types</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {analytics.deviceTypes.map((device, index) => (
-                          <div key={index} className="flex items-center justify-between">
-                            <span className="text-sm capitalize">{device.type}</span>
-                            <span className="text-sm font-medium">{device.count}</span>
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Device Types</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {analytics.deviceTypes.map((device, index) => (
+                              <div key={index} className="flex items-center justify-between">
+                                <span className="text-sm capitalize">{device.type}</span>
+                                <span className="text-sm font-medium">{device.count}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="text-center text-muted-foreground">
+                          <p>Loading analytics...</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
 
                 {/* Pending Items Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -718,19 +748,20 @@ const AdminDashboard = () => {
 
                 {/* Response Modal */}
                 {selectedMessage && (
-                  <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <Card className="w-full max-w-2xl">
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <Card className="w-full max-w-lg">
                       <CardHeader>
                         <CardTitle>Respond to Message</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
                         <div>
-                          <h4 className="font-medium">Original Message:</h4>
-                          <p className="text-sm text-muted-foreground">{selectedMessage.message}</p>
+                          <p className="text-sm text-muted-foreground">Original Message:</p>
+                          <p className="text-sm">{selectedMessage.message}</p>
                         </div>
                         <div>
-                          <label className="text-sm font-medium">Your Response:</label>
+                          <Label htmlFor="response">Your Response</Label>
                           <Textarea
+                            id="response"
                             value={responseText}
                             onChange={(e) => setResponseText(e.target.value)}
                             placeholder="Type your response here..."
@@ -738,10 +769,19 @@ const AdminDashboard = () => {
                           />
                         </div>
                         <div className="flex justify-end space-x-2">
-                          <Button variant="outline" onClick={() => setSelectedMessage(null)}>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedMessage(null);
+                              setResponseText('');
+                            }}
+                          >
                             Cancel
                           </Button>
-                          <Button onClick={() => respondToMessage(selectedMessage.id)}>
+                          <Button
+                            onClick={() => handleResponseSubmit(selectedMessage.id)}
+                            disabled={!responseText.trim()}
+                          >
                             Send Response
                           </Button>
                         </div>
