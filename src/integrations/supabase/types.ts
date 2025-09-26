@@ -430,7 +430,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      authenticate_admin: {
+        Args: { admin_email: string; admin_password: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

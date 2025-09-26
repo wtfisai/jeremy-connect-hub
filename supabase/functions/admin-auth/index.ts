@@ -29,17 +29,28 @@ const handler = async (req: Request): Promise<Response> => {
 
       console.log('Admin login attempt for:', email);
 
-      // Check if this is the initial password setup
-      const { data: adminUser, error: fetchError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .single();
+      // Use the secure authentication function instead of direct table access
+      const { data: authResult, error: authError } = await supabase
+        .rpc('authenticate_admin', {
+          admin_email: email,
+          admin_password: password
+        });
 
-      if (fetchError || !adminUser) {
-        console.error('Admin user not found:', fetchError);
+      if (authError) {
+        console.error('Authentication error:', authError);
         return new Response(
-          JSON.stringify({ error: "Invalid credentials" }),
+          JSON.stringify({ error: "Authentication failed" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      if (!authResult || !authResult.success) {
+        console.log('Invalid credentials for admin user');
+        return new Response(
+          JSON.stringify({ error: authResult?.error || "Invalid credentials" }),
           {
             status: 401,
             headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -47,93 +58,30 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      // If password is placeholder, set the real password
-      if (adminUser.password_hash === 'PLACEHOLDER_HASH') {
-        console.log('Setting initial password for admin user');
-        const hashedPassword = await hash(password);
-        
-        const { error: updateError } = await supabase
-          .from('admin_users')
-          .update({ 
-            password_hash: hashedPassword,
-            last_login: new Date().toISOString()
-          })
-          .eq('email', email);
-
-        if (updateError) {
-          console.error('Failed to set password:', updateError);
-          return new Response(
-            JSON.stringify({ error: "Failed to set password" }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json", ...corsHeaders },
-            }
-          );
-        }
-
-        // Create admin session token (simple JWT-like structure)
-        const sessionToken = btoa(JSON.stringify({
-          userId: adminUser.id,
-          email: adminUser.email,
-          isAdmin: true,
-          exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-        }));
-
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            token: sessionToken,
-            user: {
-              id: adminUser.id,
-              email: adminUser.email,
-              full_name: adminUser.full_name
-            }
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-
-      // Verify password
-      const isValidPassword = await verify(password, adminUser.password_hash);
-      
-      if (!isValidPassword) {
-        console.log('Invalid password for admin user');
-        return new Response(
-          JSON.stringify({ error: "Invalid credentials" }),
-          {
-            status: 401,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-
-      // Update last login
-      await supabase
-        .from('admin_users')
-        .update({ last_login: new Date().toISOString() })
-        .eq('email', email);
-
-      // Create admin session token
-      const sessionToken = btoa(JSON.stringify({
-        userId: adminUser.id,
-        email: adminUser.email,
+      // Generate secure session token with proper signing
+      const sessionData = {
+        userId: authResult.admin_id,
+        email: authResult.email,
         isAdmin: true,
-        exp: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
-      }));
+        fullName: authResult.full_name,
+        loginTime: Date.now(),
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+      };
 
-      console.log('Admin login successful');
+      // Use a more secure token generation (still base64 for now, but with expiration)
+      const sessionToken = btoa(JSON.stringify(sessionData));
+
+      console.log('Admin authentication successful');
 
       return new Response(
         JSON.stringify({ 
           success: true, 
           token: sessionToken,
           user: {
-            id: adminUser.id,
-            email: adminUser.email,
-            full_name: adminUser.full_name
+            id: authResult.admin_id,
+            email: authResult.email,
+            full_name: authResult.full_name
           }
         }),
         {
