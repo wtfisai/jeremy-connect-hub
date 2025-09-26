@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -17,7 +19,10 @@ import {
   Clock,
   LogOut,
   Search,
-  Filter
+  Filter,
+  CalendarDays,
+  Globe,
+  Shield
 } from "lucide-react";
 
 interface AdminUser {
@@ -70,6 +75,31 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [responseText, setResponseText] = useState('');
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [calendarSettings, setCalendarSettings] = useState({
+    workingHours: {
+      monday: { enabled: true, start: '09:00', end: '17:00' },
+      tuesday: { enabled: true, start: '09:00', end: '17:00' },
+      wednesday: { enabled: true, start: '09:00', end: '17:00' },
+      thursday: { enabled: true, start: '09:00', end: '17:00' },
+      friday: { enabled: true, start: '09:00', end: '17:00' },
+      saturday: { enabled: false, start: '09:00', end: '17:00' },
+      sunday: { enabled: false, start: '09:00', end: '17:00' }
+    },
+    timezone: 'America/New_York',
+    bufferTime: 15,
+    maxAdvanceBooking: 60
+  });
+  const [holidays, setHolidays] = useState([
+    { name: "New Year's Day", date: "2025-01-01", enabled: true },
+    { name: "Martin Luther King Jr. Day", date: "2025-01-20", enabled: true },
+    { name: "Presidents' Day", date: "2025-02-17", enabled: true },
+    { name: "Memorial Day", date: "2025-05-26", enabled: true },
+    { name: "Independence Day", date: "2025-07-04", enabled: true },
+    { name: "Labor Day", date: "2025-09-01", enabled: true },
+    { name: "Thanksgiving", date: "2025-11-27", enabled: true },
+    { name: "Christmas Eve", date: "2025-12-24", enabled: true },
+    { name: "Christmas Day", date: "2025-12-25", enabled: true }
+  ]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -334,7 +364,8 @@ const AdminDashboard = () => {
               { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
               { id: 'messages', label: 'Premium Messages', icon: MessageSquare },
               { id: 'contacts', label: 'Contact Forms', icon: Mail },
-              { id: 'analytics', label: 'Analytics', icon: Eye }
+              { id: 'analytics', label: 'Analytics', icon: Eye },
+              { id: 'calendar', label: 'Calendar Settings', icon: Calendar }
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -585,6 +616,166 @@ const AdminDashboard = () => {
                       </CardContent>
                     </Card>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'calendar' && (
+              <div className="space-y-6">
+                <h2 className="text-3xl font-bold">Calendar Settings</h2>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Working Hours */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Clock className="h-5 w-5" />
+                        Working Hours
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {Object.entries(calendarSettings.workingHours).map(([day, hours]) => (
+                        <div key={day} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Switch
+                              checked={hours.enabled}
+                              onCheckedChange={(enabled) => 
+                                setCalendarSettings(prev => ({
+                                  ...prev,
+                                  workingHours: {
+                                    ...prev.workingHours,
+                                    [day]: { ...hours, enabled }
+                                  }
+                                }))
+                              }
+                            />
+                            <Label className="capitalize font-medium">{day}</Label>
+                          </div>
+                          {hours.enabled && (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                type="time"
+                                value={hours.start}
+                                onChange={(e) => 
+                                  setCalendarSettings(prev => ({
+                                    ...prev,
+                                    workingHours: {
+                                      ...prev.workingHours,
+                                      [day]: { ...hours, start: e.target.value }
+                                    }
+                                  }))
+                                }
+                                className="w-24"
+                              />
+                              <span>to</span>
+                              <Input
+                                type="time"
+                                value={hours.end}
+                                onChange={(e) => 
+                                  setCalendarSettings(prev => ({
+                                    ...prev,
+                                    workingHours: {
+                                      ...prev.workingHours,
+                                      [day]: { ...hours, end: e.target.value }
+                                    }
+                                  }))
+                                }
+                                className="w-24"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Calendar Settings */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <CalendarDays className="h-5 w-5" />
+                        Calendar Settings
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Timezone</Label>
+                        <select 
+                          value={calendarSettings.timezone}
+                          onChange={(e) => setCalendarSettings(prev => ({ ...prev, timezone: e.target.value }))}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="America/New_York">Eastern Time (US & Canada)</option>
+                          <option value="America/Chicago">Central Time (US & Canada)</option>
+                          <option value="America/Denver">Mountain Time (US & Canada)</option>
+                          <option value="America/Los_Angeles">Pacific Time (US & Canada)</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Buffer Time (minutes)</Label>
+                        <Input
+                          type="number"
+                          value={calendarSettings.bufferTime}
+                          onChange={(e) => setCalendarSettings(prev => ({ 
+                            ...prev, 
+                            bufferTime: parseInt(e.target.value) 
+                          }))}
+                          min="0"
+                          max="60"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Max Advance Booking (days)</Label>
+                        <Input
+                          type="number"
+                          value={calendarSettings.maxAdvanceBooking}
+                          onChange={(e) => setCalendarSettings(prev => ({ 
+                            ...prev, 
+                            maxAdvanceBooking: parseInt(e.target.value) 
+                          }))}
+                          min="1"
+                          max="365"
+                        />
+                      </div>
+
+                      <Button className="w-full">
+                        <Globe className="h-4 w-4 mr-2" />
+                        Connect Google Calendar
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Holidays */}
+                  <Card className="lg:col-span-2">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Shield className="h-5 w-5" />
+                        Holiday Schedule
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {holidays.map((holiday, index) => (
+                          <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium">{holiday.name}</p>
+                              <p className="text-sm text-muted-foreground">{holiday.date}</p>
+                            </div>
+                            <Switch
+                              checked={holiday.enabled}
+                              onCheckedChange={(enabled) => {
+                                const updatedHolidays = [...holidays];
+                                updatedHolidays[index] = { ...holiday, enabled };
+                                setHolidays(updatedHolidays);
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             )}
