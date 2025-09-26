@@ -45,7 +45,7 @@ const Footer = () => {
       description: "Code repositories"
     },
     {
-      href: "https://www.behance.net/jeremywilliams62",
+      href: "https://behance.net/dobeudesigns",
       icon: ExternalLink,
       label: "Behance",
       description: "Design portfolio"

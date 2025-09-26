@@ -75,7 +75,7 @@ const Hero = () => {
             </a>
             
             <a
-              href="https://www.behance.net/jeremywilliams62"
+              href="https://behance.net/dobeudesigns"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
