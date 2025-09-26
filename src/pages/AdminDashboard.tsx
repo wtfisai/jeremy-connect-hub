@@ -307,7 +307,7 @@ const AdminDashboard = () => {
   const handleGoogleCalendarConnect = async () => {
     try {
       // Redirect to Google Calendar OAuth
-      const baseUrl = window.location.origin;
+      const baseUrl = 'https://gdnpareharddegunrjyz.supabase.co';
       const oauthUrl = `${baseUrl}/functions/v1/google-calendar-oauth?state=${adminUser?.userId}`;
       window.location.href = oauthUrl;
     } catch (error) {
@@ -767,7 +767,7 @@ const AdminDashboard = () => {
                         <select 
                           value={calendarSettings.timezone}
                           onChange={(e) => setCalendarSettings(prev => ({ ...prev, timezone: e.target.value }))}
-                          className="w-full p-2 border rounded-md"
+                          className="w-full p-2 border rounded-md bg-background text-foreground"
                         >
                           <option value="America/New_York">Eastern Time (US & Canada)</option>
                           <option value="America/Chicago">Central Time (US & Canada)</option>
