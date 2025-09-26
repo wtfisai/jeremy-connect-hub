@@ -117,21 +117,21 @@ const AdminDashboard = () => {
   const checkAdminAuth = () => {
     const token = localStorage.getItem('admin_token');
     if (!token) {
-      window.location.href = '/admin-login';
+      window.location.href = '/admin';
       return;
     }
 
     try {
       const decoded = JSON.parse(atob(token));
-      if (decoded.exp < Date.now()) {
+      if (decoded.exp < Math.floor(Date.now() / 1000)) {
         localStorage.removeItem('admin_token');
-        window.location.href = '/admin-login';
+        window.location.href = '/admin';
         return;
       }
       setAdminUser(decoded);
     } catch (error) {
       localStorage.removeItem('admin_token');
-      window.location.href = '/admin-login';
+      window.location.href = '/admin';
     }
   };
 
