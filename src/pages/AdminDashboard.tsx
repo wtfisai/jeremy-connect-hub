@@ -128,24 +128,50 @@ const AdminDashboard = () => {
     }
   }, [adminUser]);
 
-  const checkAdminAuth = () => {
-    const token = localStorage.getItem('admin_token');
-    if (!token) {
-      window.location.href = '/admin';
-      return;
-    }
-
+  const checkAdminAuth = async () => {
     try {
-      const decoded = JSON.parse(atob(token));
-      if (decoded.exp < Math.floor(Date.now() / 1000)) {
-        localStorage.removeItem('admin_token');
-        window.location.href = '/admin';
+      // Check Supabase session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.user) {
+        navigate('/admin-login');
         return;
       }
-      setAdminUser(decoded);
+
+      // Verify admin role
+      const { data: roles, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+
+      if (roleError || !roles) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have admin privileges.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        navigate('/admin-login');
+        return;
+      }
+
+      // Set admin user data
+      setAdminUser({
+        userId: session.user.id,
+        email: session.user.email || '',
+        fullName: session.user.user_metadata?.full_name || session.user.email || '',
+        isAdmin: true,
+        loginTime: new Date(session.user.created_at).getTime(),
+        iat: 0,
+        exp: 0
+      });
+
+      setLoading(false);
     } catch (error) {
-      localStorage.removeItem('admin_token');
-      window.location.href = '/admin';
+      console.error('Auth check error:', error);
+      navigate('/admin-login');
     }
   };
 
@@ -385,9 +411,18 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    navigate('/admin');
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out.",
+      });
+      navigate('/admin-login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      navigate('/admin-login');
+    }
   };
 
   const formatTimeAgo = (dateString: string) => {
