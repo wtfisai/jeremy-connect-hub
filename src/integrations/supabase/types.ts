@@ -14,36 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string
-          email: string
-          full_name: string | null
-          id: string
-          is_active: boolean
-          last_login: string | null
-          password_hash: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          full_name?: string | null
-          id?: string
-          is_active?: boolean
-          last_login?: string | null
-          password_hash: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          full_name?: string | null
-          id?: string
-          is_active?: boolean
-          last_login?: string | null
-          password_hash?: string
-        }
-        Relationships: []
-      }
       analytics_events: {
         Row: {
           browser: string | null
