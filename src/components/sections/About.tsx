@@ -6,36 +6,36 @@ import { GraduationCap, Award, MapPin, Calendar } from "lucide-react";
 const About = () => {
   const experience = [
     {
-      company: "Baldor Specialty Foods, Inc.",
-      role: "Transportation Safety Manager",
-      period: "June 2024 - Present",
-      location: "Bronx, New York",
+      company: "Fortune 500 Food Distribution",
+      role: "Supply Chain Operations",
+      period: "2020 - Present",
+      location: "Northeast Region",
       highlights: [
-        "Led safety initiatives across warehousing and transportation operations",
-        "Drove continuous improvement in workplace safety culture",
-        "Collaborated cross-functionally to mitigate risk and ensure regulatory alignment"
+        "Led comprehensive safety and operational initiatives across large-scale distribution networks",
+        "Drove continuous improvement in workplace culture and regulatory compliance",
+        "Managed cross-functional teams and training programs for 600+ personnel"
       ]
     },
     {
-      company: "US Foods",
-      role: "Transportation Manager III",
-      period: "September 2022 - April 2023",
-      location: "Perth Amboy, New Jersey",
+      company: "Regional Food Distribution Leader",
+      role: "Transportation & Logistics Management",
+      period: "2018 - 2020",
+      location: "New Jersey Region",
       highlights: [
-        "Directed large team with multiple dispatch locations",
-        "Reduced workplace incidents through proactive safety audits",
-        "Delivered training to 600+ drivers across four distribution facilities"
+        "Directed multi-site logistics operations with substantial fleet oversight",
+        "Improved operational compliance metrics from 65% to 95%",
+        "Developed strategic partnerships for long-term fleet management"
       ]
     },
     {
-      company: "Maximum Quality Foods",
-      role: "Transportation Manager",
-      period: "March 2021 - September 2022",
-      location: "Linden, New Jersey",
+      company: "Technology & Brand Development",
+      role: "Consulting & Solutions Architecture",
+      period: "2015 - Present",
+      location: "Remote / Multi-region",
       highlights: [
-        "Managed 45+ drivers and transportation supervisors",
-        "Improved PM compliance from 65% to 95%",
-        "Developed long-term fleet management partnerships"
+        "Designed and deployed custom software solutions for enterprise clients",
+        "Developed comprehensive brand strategies and digital marketing campaigns",
+        "Integrated AI/ML technologies into business processes"
       ]
     }
   ];
@@ -51,8 +51,8 @@ const About = () => {
   const education = [
     {
       degree: "Master's in Integrated Supply Chain Management",
-      institution: "Temple University - Fox School of Business",
-      achievement: "Senator Elect for Fox School of Business"
+      institution: "Top-Tier Business School",
+      achievement: "Graduate Leadership Recognition"
     }
   ];
 
@@ -67,12 +67,12 @@ const About = () => {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            About <span className="gradient-text">Jeremy Williams</span>
+            About <span className="gradient-text">Dobeu Tech Solutions</span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
-            A skilled and versatile professional with over 15 years in transportation, logistics, 
-            and supply chain management. Expert in freight optimization, KPIs, SOPs, ELD compliance, 
-            fleet management, data analysis, and team leadership.
+            15+ years of expertise in transportation, logistics, and supply chain management combined 
+            with cutting-edge technology consulting and innovative brand development. We specialize in 
+            freight optimization, KPIs, SOPs, custom software development, and strategic business solutions.
           </p>
         </motion.div>
 

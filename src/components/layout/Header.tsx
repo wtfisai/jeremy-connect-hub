@@ -45,14 +45,9 @@ const Header = () => {
           {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="flex items-center space-x-3"
+            className="flex items-center space-x-2"
           >
-            <img 
-              src={jeremyProfile} 
-              alt="Jeremy Williams"
-              className="w-8 h-8 rounded-lg object-cover"
-            />
-            <span className="font-bold text-xl gradient-text">Jeremy Williams</span>
+            <span className="font-bold text-xl gradient-text">Dobeu Tech Solutions</span>
           </motion.div>
 
           {/* Desktop Navigation */}
